@@ -1,2 +1,3 @@
-# Text-Summerizer
-Basic Implementation of a text summerization deep learning model
+# TARS NLP 
+
+Implementation of basic NLP concepts in one library. 
