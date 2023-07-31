@@ -5,6 +5,9 @@
 import nltk
 from nltk.corpus import stopwords, wordnet
 import re
+from tqdm import tqdm
+import numpy as np
+import math
 
 
 class PreProcessing:
@@ -17,7 +20,6 @@ class PreProcessing:
         # nltk.download('punkt')
         # nltk.download('averaged_perceptron_tagger')
         # nltk.download('wordnet')
-        # nltk.download('punkt')
         # nltk.download('stopwords')
         self.corpus = corpus
         self.stop_words = set(stopwords.words(lang))
@@ -25,7 +27,12 @@ class PreProcessing:
         self.sentence_list_re = []
         # self.sentence_list_re_stem: list
         self.sentence_list_re_lem = []
-
+        self.features = {}
+        self.features_list = []
+        self.term_freq: any
+        self.inverse_doc_freq: any
+        self.ngram = ()
+    
     
     @staticmethod
     def __wordnet_pos(tag: str):
@@ -79,7 +86,7 @@ class PreProcessing:
         """
 
         self.sentence_list = nltk.tokenize.sent_tokenize(self.corpus)
-        for i in range(len(self.sentence_list)):
+        for i in tqdm(range(len(self.sentence_list))):
             re_sen = re.sub('[^a-zA-Z]',' ',self.sentence_list[i]).lower()
             re_sentence = nltk.tokenize.word_tokenize(re_sen)
             filtered_sen_list = [word for word in re_sentence if word not in self.stop_words]
@@ -87,6 +94,33 @@ class PreProcessing:
             self.sentence_list_re_lem.append(self.__lemmatization(filtered_sen_list))    
 
 
+    
+    def ngrams(self,ngram_start: int ,ngram: int) -> None:
+        """Get the ngram features
+
+        Args:
+            n (int): ngram value supplied by user --> 1,2,3 ...
+        """
+
+        for n in range(ngram_start, ngram + 1):
+            for sentence in self.sentence_list_re_lem:
+                for i in range(len(sentence) + n - 1):
+                    if i >= (len(sentence) - (n + 1)):
+                        break
+                    if tuple(sentence[i:i+n]) in self.features:
+                        self.features[tuple(sentence[i:i+n])] += 1
+                    else:
+                        self.features[tuple(sentence[i:i+n])] = 1
+                        self.features_list.append(sentence[i:i+n])
+
+
+        self.ngram = (ngram_start, ngram)
+    
+
+    @property
+    def get_ngrams(self) -> dict:
+        return self.features
+    
     @property
     def get_post_processed(self) -> list:
         return self.sentence_list_re_lem
